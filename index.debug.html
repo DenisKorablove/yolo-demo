@@ -1,0 +1,87 @@
+<title>Google YOLO Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<body style="font-family:Roboto,Arial,sans-serif;">
+    <h2>Google YOLO Demo</h2>
+    <button class="google-sign retreive">Sign In Automatically</button>
+    <br>
+    <button class="google-sign hint">Sign In Requiring User Action</button>
+    <br>
+    <button id="google-signout" disabled>Sign Out</button>
+    <h3 id="state"></h3>
+    <div id="google-user" style="display:none;border-width:2px;border-style:solid;padding:10px;">
+        <img id="google-img" style="display:block;margin:0 auto;border-radius:50%;">
+        <h4 id="google-name" style="text-align:center;" />
+        <h4 id="google-email" style="text-align:center;" />
+    </div>
+    <script src="https://smartlock.google.com/client"></script>
+    <script>
+        const setState = state => document.querySelector('#state').innerText = state
+        const reset = () => {
+            document.querySelectorAll('.google-sign').forEach(el => el.disabled = false);
+            document.querySelector('#google-signout').disabled = true
+        }
+        const googleyoloData = {
+            supportedAuthMethods: [
+                "https://accounts.google.com"
+            ],
+            supportedIdTokenProviders: [{
+                uri: "https://accounts.google.com",
+                clientId: "1096921452926-0a7fevnvo3sq7sqv9vnkp5erdktlrmdp.apps.googleusercontent.com"
+            }]
+        }
+        window.onGoogleYoloLoad = googleyolo => {
+            document.querySelectorAll('.google-sign').forEach(el => el.addEventListener('click', ({
+                target
+            }) => {
+                setState('Signing In with Google...')
+                document.querySelectorAll('.google-sign').forEach(el => el.disabled = true);
+                document.querySelector('#google-signout').disabled = true;
+                (target.classList.contains('retreive') ? googleyolo.retrieve(googleyoloData) : googleyolo.hint(googleyoloData)).then(credential => {
+                    document.querySelectorAll('.google-sign').forEach(el => el.disabled = true);
+                    document.querySelector('#google-signout').disabled = false
+                    document.querySelector('#google-img').src = credential.profilePicture
+                    document.querySelector('#google-name').innerText = credential.displayName
+                    document.querySelector('#google-email').innerText = credential.id
+                    document.querySelector('#google-user').style.display = 'inline-block'
+                    setState(`Signed in successfully!`)
+                }, err => {
+                    switch (err.type) {
+                        case "userCanceled":
+                            setState('User canceled action')
+                            reset()
+                            break;
+                        case "noCredentialsAvailable":
+                            setState('No credentials available')
+                            reset()
+                            break;
+                        case "requestFailed":
+                            setState('Request to Google server failed')
+                            reset()
+                            break;
+                        case "operationCanceled":
+                            break;
+                        case "illegalConcurrentRequest":
+                            break;
+                        case "initializationError":
+
+                            console.error(err)
+                            break;
+                        case "configurationError":
+                            console.error(err)
+                            break;
+                        default:
+                            console.error(err)
+                    }
+                })
+            }))
+            document.querySelector('#google-signout').addEventListener('click', () => {
+                googleyolo.disableAutoSignIn().then(() => {
+                    reset()
+                    setState('Signed out')
+                    document.querySelector('#google-user').style.display = 'none'
+                }, () => setState('Sign out failed'))
+            })
+        }
+    </script>
+</body>
