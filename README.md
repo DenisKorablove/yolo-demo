@@ -1,4 +1,4 @@
-<h2 style="color:#E11;">This no longer works</h1>
+## This no longer works
 Sadly, Google restricted the usage of YOLO to their approved partners. Until Google opens it up to everyone, this demo will always fail.
 
 ## yolo-demo
